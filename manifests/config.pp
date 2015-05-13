@@ -2,7 +2,23 @@
 class tftp::config {
 
   case $::tftp::params::daemon {
-    default: { } # not needed for daemon-mode
+    default: { 
+      
+      file {'/etc/tftpd.map':
+        content => template('tftp/tftpd.map'),
+        mode    => '0644',
+        require => Class['tftp::install'],
+        notify  => Class['tftp::service']
+      }
+
+      file {'/etc/default/tftpd-hpa':
+        source  => 'puppet:///modules/tftp/tftpd-hpa',
+        mode    => '0644',
+        require => Class['tftp::install'],
+        notify  => Class['tftp::service']
+      }
+
+    } # not needed for daemon-mode
     false: {
       include ::xinetd
 
@@ -25,6 +41,10 @@ class tftp::config {
 
       file { $::tftp::root:
         ensure => directory,
+        mode   => '0755',
+        owner  => foreman-proxy,
+        group  => foreman-proxy,
+        recurse => true,
         notify => Class['xinetd'],
       }
     }
